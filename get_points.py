@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import math
+from sets import Set
 
 class Point:
     '''Point with cartesian coordinates'''
@@ -15,34 +16,37 @@ class Point:
         '''Test if two points are equals'''
         return self.x == other.x and self.y == other.y
 
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    @staticmethod
+    def snap(x, y):
+        '''Snap point to the integer grid'''
+        return (round(x), round(y))
+
 class HalfCircle:
     def __init__(self, radius):
         self.radius = radius
-        self.points = []
+        self.points = Set()
         self.build_points()
 
     def build_points(self):
         '''Build list of points for the half circle'''
-        for i in range(self.radius*2):
-            t = i * math.pi / (self.radius * 2)
-            self.add_point(self.get_point(t))
+        # Number of samples
+        samples_number = self.radius * 3
+        for i in range(samples_number):
+            t = i * math.pi / samples_number
+            self.points.add(self.get_point(t))
     
     def get_point(self, t):
         '''Get Point at angle t on the half circle'''
         x = self.radius * math.cos(t)
         y = self.radius * math.sin(t)
+        x, y = Point.snap(x, y)
         return Point(x, y)
-
-    def add_point(self, p):
-        '''Add point to the list if it is not already present'''
-        if p not in self.points:
-            self.points.append(p)
 
 
 if __name__ == "__main__":
-    print "hello"
-    p = Point(3, 4)
-    print p
     hc = HalfCircle(10)
     for p in hc.points:
         print p
