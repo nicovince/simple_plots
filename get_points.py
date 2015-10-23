@@ -48,6 +48,12 @@ class Plot(object):
     def __init__(self):
         self.points = Set()
 
+    def __str__(self):
+        s = ""
+        for p in self.points:
+            s += str(p) + "\n"
+        return s
+
     def dump(self, output="/dev/stdout"):
         '''Dump data to output file (default is stdout)'''
         f_out = open(output, "wb")
@@ -108,3 +114,15 @@ if __name__ == "__main__":
     hc.dump("center.txt")
     hc.offset(100,100)
     hc.dump("offset.txt")
+
+    plot = Plot()
+    plot.points.add(Point(0,0))
+    plot.points.add(Point(1,0))
+    print plot
+    for p in plot.points:
+        p.offset(-1,0)
+        break
+    print plot
+    plot.points.discard(Point(0,0))
+    print plot
+
