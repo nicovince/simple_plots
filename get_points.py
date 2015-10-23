@@ -19,6 +19,11 @@ class Point:
     def __hash__(self):
         return hash((self.x, self.y))
 
+    def mirror_y(self):
+        '''Return symetrical point on y axis'''
+        return Point(-self.x, self.y)
+
+
     @staticmethod
     def snap(x, y):
         '''Snap point to the integer grid'''
@@ -45,8 +50,11 @@ class HalfCircle:
         step = math.asin(1.0 / self.radius)
         print "step : " + str(step)
         t = 0
-        while t <= math.pi:
-            self.points.add(self.get_point(t))
+        while t <= math.pi / 2:
+            p = self.get_point(t)
+            p2 = p.mirror_y()
+            self.points.add(p)
+            self.points.add(p2)
             t = t + step
     
     def get_point(self, t):
