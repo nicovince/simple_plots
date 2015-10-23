@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import math
+import itertools
+import operator
 from sets import Set
 
 class Point:
@@ -32,6 +34,13 @@ class Point:
         '''Apply offset to point'''
         self.x += offset_x
         self.y += offset_y
+
+    def rotate(self, t):
+        '''Rotate point at an angle t around origin'''
+        m = [[math.cos(t), -math.sin(t)],[math.sin(t), math.cos(t)]]
+        v = [self.x, self.y]
+        self.x = sum(itertools.starmap(operator.mul, itertools.izip(v, m[0])))
+        self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
 
 
 class Plot(object):
