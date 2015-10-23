@@ -23,16 +23,41 @@ class Point:
         '''Return symetrical point on y axis'''
         return Point(-self.x, self.y)
 
-
     @staticmethod
     def snap(x, y):
         '''Snap point to the integer grid'''
         return (round(x), round(y))
 
-class HalfCircle:
-    def __init__(self, radius):
-        self.radius = radius
+    def offset(self, offset_x, offset_y):
+        '''Apply offset to point'''
+        self.x += offset_x
+        self.y += offset_y
+
+
+class Plot(object):
+    '''Plot object is a list of point with methods to display/dump datas'''
+    def __init__(self):
         self.points = Set()
+
+    def dump(self, output="/dev/stdout"):
+        '''Dump data to output file (default is stdout)'''
+        f_out = open(output, "wb")
+        for p in self.points:
+             f_out.write(str(p) + "\n")
+
+    def offset(self, offset_x, offset_y):
+        '''Apply offset to all the points'''
+        # NOTE: we are modifying the elements of the set we are currently iterating
+        # I would expecte to have issue because modifying an element changes its hash
+        # It looks like it is working though
+        for p in self.points:
+            p.offset(offset_x, offset_y)
+
+
+class HalfCircle(Plot):
+    def __init__(self, radius):
+        super(HalfCircle, self).__init__()
+        self.radius = radius
 
     def build_points(self):
         '''Build list of points for the half circle'''
@@ -46,7 +71,7 @@ class HalfCircle:
     def build_points_step(self):
         '''Build list of points, number of samples is based on minimum step necessary to see the first square'''
         self.points.clear()
-        #r.sin(step/2) = 1
+        #r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
         print "step : " + str(step)
         t = 0
@@ -64,16 +89,13 @@ class HalfCircle:
         x, y = Point.snap(x, y)
         return Point(x, y)
 
-    def dump(self, output="/dev/stdout"):
-        f_out = open(output, "wb")
-        for p in self.points:
-             f_out.write(str(p) + "\n")
-
 if __name__ == "__main__":
     hc = HalfCircle(10)
     hc.build_points()
     print "Number of points with build_points : " + str(len(hc.points))
-    hc.dump("1.txt")
+    #hc.dump()
     hc.build_points_step()
     print "Number of points with build_points_step : " + str(len(hc.points))
-    hc.dump("2.txt")
+    hc.dump("center.txt")
+    hc.offset(100,100)
+    hc.dump("offset.txt")
