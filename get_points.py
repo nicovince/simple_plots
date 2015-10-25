@@ -25,6 +25,14 @@ class Point:
         '''Return symetrical point on y axis'''
         return Point(-self.x, self.y)
 
+    def mirror_x(self):
+        '''Return symetrical point on x axis'''
+        return Point(self.x, -self.y)
+
+    def mirror_xy(self):
+        '''Return symetrical point from origin'''
+        return Point(-self.x, -self.y)
+
     @staticmethod
     def snap(x, y):
         '''Snap point to the integer grid'''
@@ -46,10 +54,21 @@ class Point:
         '''Dump gnuplot point'''
         return str(self.x) + " " + str(self.y) + "\n"
 
+    def gp_dump_boxxy(self):
+        '''Dump data as boxxyerrorbars to draw a box instead of a single dot'''
+        x_low = self.x
+        x_high = self.x + 1
+        y_low = self.y
+        y_high = self.y + 1
+        res = str(self.x) + " " + str(self.y)
+        res += " " + str(x_low) + " " + str(x_high)
+        res += " " + str(y_low) + " " + str(y_high)
+        res += "\n"
+        return res
 
 
 class Plot(object):
-    '''Plot object is a list of point with methods to display/dump datas'''
+    '''Plot object is a list of point with methods to display/dump datas for gnuplot'''
     def __init__(self):
         self.points = Set()
 
@@ -63,21 +82,18 @@ class Plot(object):
         '''Dump data to output file (default is stdout)'''
         f_out = open(output, "wb")
         for p in self.points:
-             f_out.write(p.gp_str())
+             f_out.write(p.gp_dump_boxxy())
 
     def gp_script(self, script_name):
         '''Generate gnuplot script and dump data to file'''
         data_file = script_name + ".dat"
         # script
         f_out = open(script_name + ".gp", "wb")
-        f_out.write("set pointsize 2\n")
+        f_out.write("set size square\n")
 
         minY, maxY = self.get_yrange()
-        f_out.write("plot " + self.get_gp_xrange() + " " + self.get_gp_yrange())
-        f_out.write("'" + data_file + "'")
-        f_out.write("using 1:2 with points pt 5\n")
-
-        f_out.write("pause -1")
+        f_out.write("plot '" + data_file + "' with boxxyerrorbars\n")
+        f_out.write("pause -1\n")
 
         # data file
         self.dump(data_file)
@@ -127,13 +143,46 @@ class Plot(object):
         minY, maxY = self.get_yrange()
         return "[y = " + str(minY) + ":" + str(maxY) + "]"
 
-class HalfCircle(Plot):
+
+class Circle(Plot):
     def __init__(self, radius):
-        super(HalfCircle, self).__init__()
+        super(Circle, self).__init__()
         self.radius = radius
 
+    def get_point(self, t):
+        '''Get Point at angle t on the circle'''
+        x = self.radius * math.cos(t)
+        y = self.radius * math.sin(t)
+        x, y = Point.snap(x, y)
+        return Point(x, y)
+
+
     def build_points(self):
-        '''Build list of points for the half circle'''
+        '''Build list of points, number of samples is based on minimum step necessary to see the first square'''
+        self.points.clear()
+        # r.sin(step) = 1
+        step = math.asin(1.0 / self.radius)
+        print "step : " + str(step)
+        t = 0
+        while t <= math.pi / 2:
+            p = self.get_point(t)
+            p2 = p.mirror_y()
+            p3 = p.mirror_x()
+            p4 = p.mirror_xy()
+            self.points.add(p)
+            self.points.add(p2)
+            self.points.add(p3)
+            self.points.add(p4)
+            t = t + step
+
+class HalfCircle(Circle):
+    def __init__(self, radius):
+        super(HalfCircle, self).__init__(radius)
+        self.radius = radius
+
+    def build_points_deprecated(self):
+        '''Build list of points for the half circle
+        iterating over high number of positions'''
         self.points.clear()
         # Number of samples
         samples_number = self.radius * 300
@@ -141,10 +190,10 @@ class HalfCircle(Plot):
             t = i * math.pi / samples_number
             self.points.add(self.get_point(t))
 
-    def build_points_step(self):
+    def build_points(self):
         '''Build list of points, number of samples is based on minimum step necessary to see the first square'''
         self.points.clear()
-        #r.sin(step) = 1
+        # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
         print "step : " + str(step)
         t = 0
@@ -154,40 +203,29 @@ class HalfCircle(Plot):
             self.points.add(p)
             self.points.add(p2)
             t = t + step
-    
-    def get_point(self, t):
-        '''Get Point at angle t on the half circle'''
-        x = self.radius * math.cos(t)
-        y = self.radius * math.sin(t)
-        x, y = Point.snap(x, y)
-        return Point(x, y)
+
+def Ellipsis(Plot):
+    def __init__(self, a, b):
+        super(Ellipsis, self).__init__()
+        self.a = a
+        self.b = b
+
+    def build_points(self):
+        return
+
 
 if __name__ == "__main__":
-    hc = HalfCircle(10)
-    hc.build_points()
-    print "Number of points with build_points : " + str(len(hc.points))
-    #hc.dump()
-    hc.build_points_step()
-    print "Number of points with build_points_step : " + str(len(hc.points))
-    hc.dump("center.txt")
-    hc.gp_script("center")
-    hc.offset(100,100)
-    hc.dump("offset.txt")
-    hc.gp_script("offset")
 
-    plot = Plot()
-    plot.points.add(Point(0,0))
-    plot.points.add(Point(1,0))
-    print plot
-    for p in plot.points:
-        p.offset(-1,0)
-        break
-    print plot
-    plot.points.discard(Point(0,0))
-    print plot
-
+    # Half Circle
     hc = HalfCircle(20)
-    hc.build_points_step()
+    hc.build_points()
     hc.offset(263,50)
     hc.gp_script("ocean")
+
+    # Circle
+    circle = Circle(30)
+    circle.build_points()
+    circle.offset(200,222)
+    circle.gp_script("circle")
+
 
