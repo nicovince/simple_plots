@@ -42,6 +42,11 @@ class Point:
         self.x = sum(itertools.starmap(operator.mul, itertools.izip(v, m[0])))
         self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
 
+    def gp_str(self):
+        '''Dump gnuplot point'''
+        return str(self.x) + " " + str(self.y) + "\n"
+
+
 
 class Plot(object):
     '''Plot object is a list of point with methods to display/dump datas'''
@@ -58,7 +63,7 @@ class Plot(object):
         '''Dump data to output file (default is stdout)'''
         f_out = open(output, "wb")
         for p in self.points:
-             f_out.write(str(p) + "\n")
+             f_out.write(p.gp_str())
 
     def offset(self, offset_x, offset_y):
         '''Apply offset to all the points'''
