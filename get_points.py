@@ -65,6 +65,24 @@ class Plot(object):
         for p in self.points:
              f_out.write(p.gp_str())
 
+    def gp_script(self, script_name):
+        '''Generate gnuplot script and dump data to file'''
+        data_file = script_name + ".dat"
+        # script
+        f_out = open(script_name + ".gp", "wb")
+        f_out.write("set pointsize 2\n")
+
+        minY, maxY = self.get_yrange()
+        f_out.write("plot " + self.get_gp_xrange() + " " + self.get_gp_yrange())
+        f_out.write("'" + data_file + "'")
+        f_out.write("using 1:2 with points pt 5\n")
+
+        f_out.write("pause -1")
+
+        # data file
+        self.dump(data_file)
+
+
     def offset(self, offset_x, offset_y):
         '''Apply offset to all the points'''
         # NOTE: we are modifying the elements of the set we are currently iterating
@@ -73,6 +91,41 @@ class Plot(object):
         for p in self.points:
             p.offset(offset_x, offset_y)
 
+    def get_xrange(self, margin=1):
+        '''Get horizontal range for which graph will be displayed extanded by margin on both side'''
+        minX = None
+        maxX = None
+        for p in self.points:
+            if minX == None:
+                minX = p.x
+                maxX = p.x
+            else:
+                minX = min(minX, p.x)
+                maxX = max(maxX, p.x)
+        return (minX - margin, maxX  + margin)
+
+    def get_gp_xrange(self):
+        '''Return xrange for gnuplot script'''
+        minX, maxX = self.get_xrange()
+        return "[x = " + str(minX) + ":" + str(maxX) + "]"
+
+    def get_yrange(self, margin=1):
+        '''Get vertical range for which graph will be displayed extanded by margin on both side'''
+        minY = None
+        maxY = None
+        for p in self.points:
+            if minY == None:
+                minY = p.y
+                maxY = p.y
+            else:
+                minY = min(minY, p.y)
+                maxY = max(maxY, p.y)
+        return (minY - margin, maxY  + margin)
+
+    def get_gp_yrange(self):
+        '''Return yrange for gnuplot script'''
+        minY, maxY = self.get_yrange()
+        return "[y = " + str(minY) + ":" + str(maxY) + "]"
 
 class HalfCircle(Plot):
     def __init__(self, radius):
@@ -117,8 +170,10 @@ if __name__ == "__main__":
     hc.build_points_step()
     print "Number of points with build_points_step : " + str(len(hc.points))
     hc.dump("center.txt")
+    hc.gp_script("center")
     hc.offset(100,100)
     hc.dump("offset.txt")
+    hc.gp_script("offset")
 
     plot = Plot()
     plot.points.add(Point(0,0))
