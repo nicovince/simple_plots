@@ -90,7 +90,7 @@ class Plot(object):
         # script
         f_out = open(script_name + ".gnu", "wb")
         # make sure x/y axes have same scale
-        f_out.write("set size square\n")
+        f_out.write("set size ratio -1\n")
         f_out.write("plot '" + data_file + "' with boxxyerrorbars\n")
         f_out.write("pause -1\n")
         f_out.write("# vim: set syntax=gnuplot:\n")
@@ -202,14 +202,39 @@ class HalfCircle(Circle):
             self.points.add(p2)
             t = t + step
 
-def Ellipsis(Plot):
+class Ellipse(Plot):
     def __init__(self, a, b):
-        super(Ellipsis, self).__init__()
+        super(Ellipse, self).__init__()
         self.a = a
         self.b = b
 
+    def get_point(self, t):
+        '''Get point of ellipse at angle t'''
+        # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
+        r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
+                                        math.pow(self.a * math.sin(t), 2))
+        x = r * math.cos(t)
+        y = r * math.sin(t)
+        x, y = Point.snap(x, y)
+        return Point(x, y)
+
+
     def build_points(self):
-        return
+        '''Build list of points of ellipse'''
+        # max(a,b) * sin(step) = 1
+        step = math.asin(1.0 / max(self.a, self.b))
+        print step
+        t = 0
+        while t < math.pi/2:
+            p = self.get_point(t)
+            p2 = p.mirror_y()
+            p3 = p.mirror_x()
+            p4 = p.mirror_xy()
+            self.points.add(p)
+            self.points.add(p2)
+            self.points.add(p3)
+            self.points.add(p4)
+            t += step
 
 
 if __name__ == "__main__":
@@ -226,4 +251,8 @@ if __name__ == "__main__":
     circle.offset(200,222)
     circle.gp_script("circle")
 
+    # Ellipse
+    ellipse = Ellipse(10, 5)
+    ellipse.build_points()
+    ellipse.gp_script("ellipse")
 
