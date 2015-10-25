@@ -88,12 +88,12 @@ class Plot(object):
         '''Generate gnuplot script and dump data to file'''
         data_file = script_name + ".dat"
         # script
-        f_out = open(script_name + ".gp", "wb")
+        f_out = open(script_name + ".gnu", "wb")
+        # make sure x/y axes have same scale
         f_out.write("set size square\n")
-
-        minY, maxY = self.get_yrange()
         f_out.write("plot '" + data_file + "' with boxxyerrorbars\n")
         f_out.write("pause -1\n")
+        f_out.write("# vim: set syntax=gnuplot:\n")
 
         # data file
         self.dump(data_file)
@@ -162,7 +162,6 @@ class Circle(Plot):
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
-        print "step : " + str(step)
         t = 0
         while t <= math.pi / 2:
             p = self.get_point(t)
@@ -195,7 +194,6 @@ class HalfCircle(Circle):
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
-        print "step : " + str(step)
         t = 0
         while t <= math.pi / 2:
             p = self.get_point(t)
