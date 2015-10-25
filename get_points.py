@@ -186,3 +186,8 @@ if __name__ == "__main__":
     plot.points.discard(Point(0,0))
     print plot
 
+    hc = HalfCircle(20)
+    hc.build_points_step()
+    hc.offset(263,50)
+    hc.gp_script("ocean")
+
