@@ -5,57 +5,57 @@ import operator
 from sets import Set
 
 class Point:
-    '''Point with cartesian coordinates'''
+    """Point with cartesian coordinates"""
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def __str__(self):
-        '''Return string representation of Point'''
+        """Return string representation of Point"""
         return "(%d, %d)" % (self.x, self.y)
 
     def __eq__(self, other):
-        '''Test if two points are equals'''
+        """Test if two points are equals"""
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
         return hash((self.x, self.y))
 
     def mirror_y(self):
-        '''Return symetrical point on y axis'''
+        """Return symetrical point on y axis"""
         return Point(-self.x, self.y)
 
     def mirror_x(self):
-        '''Return symetrical point on x axis'''
+        """Return symetrical point on x axis"""
         return Point(self.x, -self.y)
 
     def mirror_xy(self):
-        '''Return symetrical point from origin'''
+        """Return symetrical point from origin"""
         return Point(-self.x, -self.y)
 
     @staticmethod
     def snap(x, y):
-        '''Snap point to the integer grid'''
+        """Snap point to the integer grid"""
         return (round(x), round(y))
 
     def offset(self, offset_x, offset_y):
-        '''Apply offset to point'''
+        """Apply offset to point"""
         self.x += offset_x
         self.y += offset_y
 
     def rotate(self, t):
-        '''Rotate point at an angle t around origin'''
+        """Rotate point at an angle t around origin"""
         m = [[math.cos(t), -math.sin(t)],[math.sin(t), math.cos(t)]]
         v = [self.x, self.y]
         self.x = sum(itertools.starmap(operator.mul, itertools.izip(v, m[0])))
         self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
 
     def gp_str(self):
-        '''Dump gnuplot point'''
+        """Dump gnuplot point"""
         return str(self.x) + " " + str(self.y) + "\n"
 
     def gp_dump_boxxy(self):
-        '''Dump data as boxxyerrorbars to draw a box instead of a single dot'''
+        """Dump data as boxxyerrorbars to draw a box instead of a single dot"""
         x_low = self.x
         x_high = self.x + 1
         y_low = self.y
@@ -68,7 +68,7 @@ class Point:
 
 
 class Plot(object):
-    '''Plot object is a list of point with methods to display/dump datas for gnuplot'''
+    """Plot object is a list of point with methods to display/dump datas for gnuplot"""
     def __init__(self):
         self.points = Set()
 
@@ -79,13 +79,13 @@ class Plot(object):
         return s
 
     def dump(self, output="/dev/stdout"):
-        '''Dump data to output file (default is stdout)'''
+        """Dump data to output file (default is stdout)"""
         f_out = open(output, "wb")
         for p in self.points:
              f_out.write(p.gp_dump_boxxy())
 
     def gp_script(self, script_name):
-        '''Generate gnuplot script and dump data to file'''
+        """Generate gnuplot script and dump data to file"""
         data_file = script_name + ".dat"
         # script
         f_out = open(script_name + ".gnu", "wb")
@@ -100,7 +100,7 @@ class Plot(object):
 
 
     def offset(self, offset_x, offset_y):
-        '''Apply offset to all the points'''
+        """Apply offset to all the points"""
         # NOTE: we are modifying the elements of the set we are currently iterating
         # I would expecte to have issue because modifying an element changes its hash
         # It looks like it is working though
@@ -108,7 +108,7 @@ class Plot(object):
             p.offset(offset_x, offset_y)
 
     def get_xrange(self, margin=1):
-        '''Get horizontal range for which graph will be displayed extanded by margin on both side'''
+        """Get horizontal range for which graph will be displayed extanded by margin on both side"""
         minX = None
         maxX = None
         for p in self.points:
@@ -121,12 +121,12 @@ class Plot(object):
         return (minX - margin, maxX  + margin)
 
     def get_gp_xrange(self):
-        '''Return xrange for gnuplot script'''
+        """Return xrange for gnuplot script"""
         minX, maxX = self.get_xrange()
         return "[x = " + str(minX) + ":" + str(maxX) + "]"
 
     def get_yrange(self, margin=1):
-        '''Get vertical range for which graph will be displayed extanded by margin on both side'''
+        """Get vertical range for which graph will be displayed extanded by margin on both side"""
         minY = None
         maxY = None
         for p in self.points:
@@ -139,7 +139,7 @@ class Plot(object):
         return (minY - margin, maxY  + margin)
 
     def get_gp_yrange(self):
-        '''Return yrange for gnuplot script'''
+        """Return yrange for gnuplot script"""
         minY, maxY = self.get_yrange()
         return "[y = " + str(minY) + ":" + str(maxY) + "]"
 
@@ -150,7 +150,7 @@ class Circle(Plot):
         self.radius = radius
 
     def get_point(self, t):
-        '''Get Point at angle t on the circle'''
+        """Get Point at angle t on the circle"""
         x = self.radius * math.cos(t)
         y = self.radius * math.sin(t)
         x, y = Point.snap(x, y)
@@ -158,7 +158,7 @@ class Circle(Plot):
 
 
     def build_points(self):
-        '''Build list of points, number of samples is based on minimum step necessary to see the first square'''
+        """Build list of points, number of samples is based on minimum step necessary to see the first square"""
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
@@ -180,8 +180,8 @@ class HalfCircle(Circle):
         self.radius = radius
 
     def build_points_deprecated(self):
-        '''Build list of points for the half circle
-        iterating over high number of positions'''
+        """Build list of points for the half circle
+        iterating over high number of positions"""
         self.points.clear()
         # Number of samples
         samples_number = self.radius * 300
@@ -190,7 +190,7 @@ class HalfCircle(Circle):
             self.points.add(self.get_point(t))
 
     def build_points(self):
-        '''Build list of points, number of samples is based on minimum step necessary to see the first square'''
+        """Build list of points, number of samples is based on minimum step necessary to see the first square"""
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
@@ -209,7 +209,7 @@ class Ellipse(Plot):
         self.b = b
 
     def get_point(self, t):
-        '''Get point of ellipse at angle t'''
+        """Get point of ellipse at angle t"""
         # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
         r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
                                         math.pow(self.a * math.sin(t), 2))
@@ -220,7 +220,7 @@ class Ellipse(Plot):
 
 
     def build_points(self):
-        '''Build list of points of ellipse'''
+        """Build list of points of ellipse"""
         # max(a,b) * sin(step) = 1
         step = math.asin(1.0 / max(self.a, self.b))
         print step
