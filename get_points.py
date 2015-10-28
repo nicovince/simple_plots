@@ -5,7 +5,11 @@ import operator
 from sets import Set
 
 class Point:
-    """Point with cartesian coordinates"""
+    """
+    Point with cartesian coordinates.
+    
+    Methods prefixed with gp_ are intended to be used for gnuplot plotting.
+    """
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -15,10 +19,11 @@ class Point:
         return "(%d, %d)" % (self.x, self.y)
 
     def __eq__(self, other):
-        """Test if two points are equals"""
+        """Two points are equals if their coordinates are equals."""
         return self.x == other.x and self.y == other.y
 
     def __hash__(self):
+        """Hash function used to adds object of this classes to Set, Dict..."""
         return hash((self.x, self.y))
 
     def mirror_y(self):
@@ -45,17 +50,19 @@ class Point:
 
     def rotate(self, t):
         """Rotate point at an angle t around origin"""
+        # Rotation matrix
         m = [[math.cos(t), -math.sin(t)],[math.sin(t), math.cos(t)]]
         v = [self.x, self.y]
+        # Apply matrix to point's coordinates
         self.x = sum(itertools.starmap(operator.mul, itertools.izip(v, m[0])))
         self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
 
     def gp_str(self):
-        """Dump gnuplot point"""
+        """Return gnuplot point notation"""
         return str(self.x) + " " + str(self.y) + "\n"
 
     def gp_dump_boxxy(self):
-        """Dump data as boxxyerrorbars to draw a box instead of a single dot"""
+        """Return point as boxxyerrorbars to draw a box instead of a single dot"""
         x_low = self.x
         x_high = self.x + 1
         y_low = self.y
@@ -68,7 +75,7 @@ class Point:
 
 
 class Plot(object):
-    """Plot object is a list of point with methods to display/dump datas for gnuplot"""
+    """List of point with methods to display/dump datas for gnuplot"""
     def __init__(self):
         self.points = Set()
 
@@ -79,7 +86,7 @@ class Plot(object):
         return s
 
     def dump(self, output="/dev/stdout"):
-        """Dump data to output file (default is stdout)"""
+        """Dump data to stdout or file if provided"""
         f_out = open(output, "wb")
         for p in self.points:
              f_out.write(p.gp_dump_boxxy())
@@ -145,12 +152,16 @@ class Plot(object):
 
 
 class Circle(Plot):
+    """List of points to form a circle in a discrete cartesian coordinates system"""
     def __init__(self, radius):
         super(Circle, self).__init__()
         self.radius = radius
 
     def get_point(self, t):
-        """Get Point at angle t on the circle"""
+        """
+        Get Point at angle t on the circle
+        
+        Point is snapped to integer coordinates"""
         x = self.radius * math.cos(t)
         y = self.radius * math.sin(t)
         x, y = Point.snap(x, y)
@@ -158,7 +169,11 @@ class Circle(Plot):
 
 
     def build_points(self):
-        """Build list of points, number of samples is based on minimum step necessary to see the first square"""
+        """
+        Build list of points.
+        
+        Number of samples is based on minimum step necessary to see the first square.
+        """
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
@@ -175,13 +190,17 @@ class Circle(Plot):
             t = t + step
 
 class HalfCircle(Circle):
+    """List of points to form a half circle in a discrete cartesian coordinates system."""
     def __init__(self, radius):
         super(HalfCircle, self).__init__(radius)
         self.radius = radius
 
     def build_points_deprecated(self):
-        """Build list of points for the half circle
-        iterating over high number of positions"""
+        """
+        Build list of points for the half circle.
+
+        Iterating over high number of positions
+        """
         self.points.clear()
         # Number of samples
         samples_number = self.radius * 300
@@ -190,7 +209,11 @@ class HalfCircle(Circle):
             self.points.add(self.get_point(t))
 
     def build_points(self):
-        """Build list of points, number of samples is based on minimum step necessary to see the first square"""
+        """
+        Build list of points.
+
+        Number of samples is based on minimum step necessary to see the first square.
+        """
         self.points.clear()
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
@@ -203,13 +226,14 @@ class HalfCircle(Circle):
             t = t + step
 
 class Ellipse(Plot):
+    """List of point to form an ellipse in a disrete cartesian coordinates system."""
     def __init__(self, a, b):
         super(Ellipse, self).__init__()
         self.a = a
         self.b = b
 
     def get_point(self, t):
-        """Get point of ellipse at angle t"""
+        """Get point of ellipse at angle t."""
         # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
         r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
                                         math.pow(self.a * math.sin(t), 2))
@@ -220,7 +244,7 @@ class Ellipse(Plot):
 
 
     def build_points(self):
-        """Build list of points of ellipse"""
+        """Build list of points of ellipse."""
         # max(a,b) * sin(step) = 1
         step = math.asin(1.0 / max(self.a, self.b))
         print step
