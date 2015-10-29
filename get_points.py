@@ -77,7 +77,7 @@ class Point:
 class Plot(object):
     """List of point with methods to display/dump datas for gnuplot"""
     def __init__(self):
-        self.points = Set()
+        self.points = list()
 
     def __str__(self):
         s = ""
@@ -90,6 +90,11 @@ class Plot(object):
         f_out = open(output, "wb")
         for p in self.points:
              f_out.write(p.gp_dump_boxxy())
+
+    def add(self, p):
+        """Add Point to list if not already present"""
+        if p not in self.points:
+            self.points.append(p)
 
     def gp_script(self, script_name):
         """Generate gnuplot script and dump data to file"""
@@ -174,7 +179,7 @@ class Circle(Plot):
         
         Number of samples is based on minimum step necessary to see the first square.
         """
-        self.points.clear()
+        del self.points[:]
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
         t = 0
@@ -183,10 +188,10 @@ class Circle(Plot):
             p2 = p.mirror_y()
             p3 = p.mirror_x()
             p4 = p.mirror_xy()
-            self.points.add(p)
-            self.points.add(p2)
-            self.points.add(p3)
-            self.points.add(p4)
+            self.add(p)
+            self.add(p2)
+            self.add(p3)
+            self.add(p4)
             t = t + step
 
 class HalfCircle(Circle):
@@ -201,12 +206,12 @@ class HalfCircle(Circle):
 
         Iterating over high number of positions
         """
-        self.points.clear()
+        del self.points[:]
         # Number of samples
         samples_number = self.radius * 300
         for i in range(samples_number):
             t = i * math.pi / samples_number
-            self.points.add(self.get_point(t))
+            self.add(self.get_point(t))
 
     def build_points(self):
         """
@@ -214,15 +219,15 @@ class HalfCircle(Circle):
 
         Number of samples is based on minimum step necessary to see the first square.
         """
-        self.points.clear()
+        del self.points[:]
         # r.sin(step) = 1
         step = math.asin(1.0 / self.radius)
         t = 0
         while t <= math.pi / 2:
             p = self.get_point(t)
             p2 = p.mirror_y()
-            self.points.add(p)
-            self.points.add(p2)
+            self.add(p)
+            self.add(p2)
             t = t + step
 
 class Ellipse(Plot):
@@ -247,17 +252,16 @@ class Ellipse(Plot):
         """Build list of points of ellipse."""
         # max(a,b) * sin(step) = 1
         step = math.asin(1.0 / max(self.a, self.b))
-        print step
         t = 0
         while t < math.pi/2:
             p = self.get_point(t)
             p2 = p.mirror_y()
             p3 = p.mirror_x()
             p4 = p.mirror_xy()
-            self.points.add(p)
-            self.points.add(p2)
-            self.points.add(p3)
-            self.points.add(p4)
+            self.add(p)
+            self.add(p2)
+            self.add(p3)
+            self.add(p4)
             t += step
 
 
