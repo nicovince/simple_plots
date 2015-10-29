@@ -180,45 +180,41 @@ class Plot(object):
         minY, maxY = self.get_yrange()
         return "[y = " + str(minY) + ":" + str(maxY) + "]"
 
-
-class Circle(Plot):
-    """List of points to form a circle in a discrete cartesian coordinates system"""
-    def __init__(self, radius):
-        super(Circle, self).__init__()
-        self.radius = radius
+class Ellipse(Plot):
+    """List of point to form an ellipse in a disrete cartesian coordinates system."""
+    def __init__(self, a, b):
+        super(Ellipse, self).__init__()
+        self.a = a
+        self.b = b
         self.center = Point(0,0)
-
-    def get_point(self, t):
-        """
-        Get Point at angle t on the circle
-        
-        Point is snapped to integer coordinates"""
-        x = self.radius * math.cos(t)
-        y = self.radius * math.sin(t)
-        x, y = Point.snap(x, y)
-        return Point(x, y)
 
     def offset(self, offset_x, offset_y):
         """
-        Apply offset to circle
+        Apply offset to ellipse
 
         Adds offset coords to center and apply this offset to the list of points if they are already built
         """
         self.center.offset(offset_x, offset_y)
         # Call parent's offset method to move the points
-        super(Circle, self).offset(offset_x, offset_y)
+        super(Ellipse, self).offset(offset_x, offset_y)
+
+    def get_point(self, t):
+        """Get point of ellipse at angle t."""
+        # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
+        r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
+                                        math.pow(self.a * math.sin(t), 2))
+        x = r * math.cos(t)
+        y = r * math.sin(t)
+        x, y = Point.snap(x, y)
+        return Point(x, y)
+
 
     def build_points(self):
-        """
-        Build list of points.
-        
-        Number of samples is based on minimum step necessary to see the first square.
-        """
-        del self.points[:]
-        # r.sin(step) = 1
-        step = math.asin(1.0 / self.radius)
+        """Build list of points of ellipse."""
+        # max(a,b) * sin(step) = 1
+        step = math.asin(1.0 / max(self.a, self.b))
         t = 0
-        while t <= math.pi / 2:
+        while t < math.pi/2:
             p = self.get_point(t)
             p2 = p.mirror_y()
             p3 = p.mirror_x()
@@ -227,7 +223,7 @@ class Circle(Plot):
             self.add(p2)
             self.add(p3)
             self.add(p4)
-            t = t + step
+            t += step
 
     def remove_corners(self):
         """
@@ -269,6 +265,15 @@ class Circle(Plot):
             return False
 
 
+class Circle(Ellipse):
+    """List of points to form a circle in a discrete cartesian coordinates system"""
+
+    def __init__(self, radius):
+        # Circle is an ellipse with major and minor radius equals
+        super(Circle, self).__init__(radius, radius)
+        self.radius = radius
+
+
 class HalfCircle(Circle):
     """List of points to form a half circle in a discrete cartesian coordinates system."""
     def __init__(self, radius):
@@ -304,41 +309,6 @@ class HalfCircle(Circle):
             self.add(p)
             self.add(p2)
             t = t + step
-
-class Ellipse(Plot):
-    """List of point to form an ellipse in a disrete cartesian coordinates system."""
-    def __init__(self, a, b):
-        super(Ellipse, self).__init__()
-        self.a = a
-        self.b = b
-
-    def get_point(self, t):
-        """Get point of ellipse at angle t."""
-        # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
-        r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
-                                        math.pow(self.a * math.sin(t), 2))
-        x = r * math.cos(t)
-        y = r * math.sin(t)
-        x, y = Point.snap(x, y)
-        return Point(x, y)
-
-
-    def build_points(self):
-        """Build list of points of ellipse."""
-        # max(a,b) * sin(step) = 1
-        step = math.asin(1.0 / max(self.a, self.b))
-        t = 0
-        while t < math.pi/2:
-            p = self.get_point(t)
-            p2 = p.mirror_y()
-            p3 = p.mirror_x()
-            p4 = p.mirror_xy()
-            self.add(p)
-            self.add(p2)
-            self.add(p3)
-            self.add(p4)
-            t += step
-
 
 if __name__ == "__main__":
 
