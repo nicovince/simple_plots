@@ -27,17 +27,20 @@ class Point:
         """Hash function used to adds object of this classes to Set, Dict..."""
         return hash((self.x, self.y))
 
-    def mirror_y(self):
-        """Return symetrical point on y axis"""
-        return Point(-self.x, self.y)
+    def mirror_y(self, x=0):
+        """Return symetrical point on vertical axis."""
+        return Point(x - abs(x-self.x), self.y)
 
-    def mirror_x(self):
-        """Return symetrical point on x axis"""
-        return Point(self.x, -self.y)
+    def mirror_x(self, y=0):
+        """Return symetrical point on horizontal axis."""
+        return Point(self.x, y - abs(y-self.y))
 
-    def mirror_xy(self):
-        """Return symetrical point from origin"""
-        return Point(-self.x, -self.y)
+    def mirror_xy(self, symetry_center=None):
+        """Return symetrical point from provided point"""
+        if symetry_center is None:
+            symetry_center = Point(0, 0)
+        return Point(symetry_center.x - abs(symetry_center.x-self.x),
+                     symetry_center.y - abs(symetry_center.y-self.y))
 
     @staticmethod
     def snap(x, y):
@@ -203,8 +206,8 @@ class Ellipse(Plot):
         # r(t) = a*b / sqrt( (b*cos(t))^2 + (a*sin(t))^2 )
         r = self.a * self.b / math.sqrt(math.pow(self.b * math.cos(t), 2) +
                                         math.pow(self.a * math.sin(t), 2))
-        x = r * math.cos(t)
-        y = r * math.sin(t)
+        x = self.center.x + r*math.cos(t)
+        y = self.center.y + r*math.sin(t)
         x, y = Point.snap(x, y)
         return Point(x, y)
 
@@ -216,9 +219,9 @@ class Ellipse(Plot):
         t = 0
         while t < math.pi/2:
             p = self.get_point(t)
-            p2 = p.mirror_y()
-            p3 = p.mirror_x()
-            p4 = p.mirror_xy()
+            p2 = p.mirror_y(self.center.x)
+            p3 = p.mirror_x(self.center.y)
+            p4 = p.mirror_xy(self.center)
             self.add(p)
             self.add(p2)
             self.add(p3)
@@ -305,7 +308,7 @@ class HalfCircle(Circle):
         t = 0
         while t <= math.pi / 2:
             p = self.get_point(t)
-            p2 = p.mirror_y()
+            p2 = p.mirror_y(self.center.x)
             self.add(p)
             self.add(p2)
             t = t + step
@@ -329,4 +332,10 @@ if __name__ == "__main__":
     ellipse = Ellipse(10, 5)
     ellipse.build_points()
     #ellipse.gp_script("ellipse")
+
+    circle_offset = Circle(30)
+    circle_offset.offset(200, 100)
+    circle_offset.build_points()
+    circle_offset.remove_corners()
+    circle_offset.gp_script("circle_offset")
 
