@@ -2,6 +2,7 @@
 import math
 import itertools
 import operator
+import copy
 from sets import Set
 
 class Point:
@@ -56,6 +57,30 @@ class Point:
         # Apply matrix to point's coordinates
         self.x = sum(itertools.starmap(operator.mul, itertools.izip(v, m[0])))
         self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
+
+    def is_north(self):
+        """Returns true if point is in north sector (y >= 0)"""
+        return self.y >= 0
+
+    def is_south(self):
+        """Returns true if point is in south sector (y < 0)"""
+        return not(self.is_north())
+
+    def is_east(self):
+        """Returns true if point is in east sector x >= 0)"""
+        return self.x >= 0
+
+    def is_west(self):
+        """Returns true if point is in west sector (x < 0)"""
+        return not(self.is_east())
+
+    def is_north_east(self):
+        """Returns true if point is in north east sector"""
+        return self.is_north() and self.is_east()
+
+    def is_north_west(self):
+        """Returns true if point is in north west sector"""
+        return self.is_north() and self.is_west()
 
     def gp_str(self):
         """Return gnuplot point notation"""
@@ -161,6 +186,7 @@ class Circle(Plot):
     def __init__(self, radius):
         super(Circle, self).__init__()
         self.radius = radius
+        self.center = Point(0,0)
 
     def get_point(self, t):
         """
@@ -172,6 +198,15 @@ class Circle(Plot):
         x, y = Point.snap(x, y)
         return Point(x, y)
 
+    def offset(self, offset_x, offset_y):
+        """
+        Apply offset to circle
+
+        Adds offset coords to center and apply this offset to the list of points if they are already built
+        """
+        self.center.offset(offset_x, offset_y)
+        # Call parent's offset method to move the points
+        super(Circle, self).offset(offset_x, offset_y)
 
     def build_points(self):
         """
@@ -193,6 +228,46 @@ class Circle(Plot):
             self.add(p3)
             self.add(p4)
             t = t + step
+
+    def remove_corners(self):
+        """
+        Remove corner points on the inside of the plot
+
+        For a closed shape, it may be necessary to remove corners inside the plot
+        to smooth the figure :
+         xxx        xxx
+        xr rx      x   x
+        x   x  ->  x   x
+        xr rx      x   x
+         xxx        xxx
+        """
+        # copy list of points to iterate over
+        lp = copy.copy(self.points)
+        for p in lp:
+            if self.is_corner(p):
+                self.points.remove(p)
+
+    def is_corner(self, p):
+        """Return true if p is forming a corner with adjacent points"""
+        # get other points that would form the corner depending on quadrant
+        # determine quadrant for circle centered to origin
+        pc = Point(p.x - self.center.x, p.y - self.center.y)
+        if pc.is_north():
+            pv = Point(p.x, p.y+1)
+        else:
+            pv = Point(p.x, p.y-1)
+
+        if pc.is_east():
+            ph = Point(p.x+1, p.y)
+        else:
+            ph = Point(p.x-1, p.y)
+
+        if ph in self.points and pv in self.points:
+            print(str(p) + " is forming a corner with " + str(ph) + " and " + str(pv))
+            return True
+        else:
+            return False
+
 
 class HalfCircle(Circle):
     """List of points to form a half circle in a discrete cartesian coordinates system."""
@@ -276,11 +351,12 @@ if __name__ == "__main__":
     # Circle
     circle = Circle(30)
     circle.build_points()
-    circle.offset(200,222)
+    circle.offset(200,100)
+    circle.remove_corners()
     circle.gp_script("circle")
 
     # Ellipse
     ellipse = Ellipse(10, 5)
     ellipse.build_points()
-    ellipse.gp_script("ellipse")
+    #ellipse.gp_script("ellipse")
 
