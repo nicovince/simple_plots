@@ -11,12 +11,13 @@ class Point:
     
     Methods prefixed with gp_ are intended to be used for gnuplot plotting.
     """
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def __str__(self):
-        """Return string representation of Point"""
+        """Return string representation of Point."""
         return "(%d, %d)" % (self.x, self.y)
 
     def __eq__(self, other):
@@ -36,7 +37,7 @@ class Point:
         return Point(self.x, y - (self.y - y))
 
     def mirror_xy(self, symetry_center=None):
-        """Return symetrical point from provided point"""
+        """Return symetrical point from provided point."""
         if symetry_center is None:
             symetry_center = Point(0, 0)
         return Point(symetry_center.x - (self.x - symetry_center.x),
@@ -44,16 +45,16 @@ class Point:
 
     @staticmethod
     def snap(x, y):
-        """Snap point to the integer grid"""
+        """Snap point to the integer grid."""
         return (round(x), round(y))
 
     def offset(self, offset_x, offset_y):
-        """Apply offset to point"""
+        """Apply offset to point."""
         self.x += offset_x
         self.y += offset_y
 
     def rotate(self, t):
-        """Rotate point at an angle t around origin"""
+        """Rotate point at an angle t around origin."""
         # Rotation matrix
         m = [[math.cos(t), -math.sin(t)],[math.sin(t), math.cos(t)]]
         v = [self.x, self.y]
@@ -62,35 +63,35 @@ class Point:
         self.y = sum(itertools.starmap(operator.mul, itertools.izip(v, m[1])))
 
     def is_north(self):
-        """Returns true if point is in north sector (y >= 0)"""
+        """Returns true if point is in north sector (y >= 0)."""
         return self.y >= 0
 
     def is_south(self):
-        """Returns true if point is in south sector (y < 0)"""
+        """Returns true if point is in south sector (y < 0)."""
         return not(self.is_north())
 
     def is_east(self):
-        """Returns true if point is in east sector x >= 0)"""
+        """Returns true if point is in east sector x >= 0)."""
         return self.x >= 0
 
     def is_west(self):
-        """Returns true if point is in west sector (x < 0)"""
+        """Returns true if point is in west sector (x < 0)."""
         return not(self.is_east())
 
     def is_north_east(self):
-        """Returns true if point is in north east sector"""
+        """Returns true if point is in north east sector."""
         return self.is_north() and self.is_east()
 
     def is_north_west(self):
-        """Returns true if point is in north west sector"""
+        """Returns true if point is in north west sector."""
         return self.is_north() and self.is_west()
 
     def gp_str(self):
-        """Return gnuplot point notation"""
+        """Return gnuplot point notation."""
         return str(self.x) + " " + str(self.y) + "\n"
 
     def gp_dump_boxxy(self):
-        """Return point as boxxyerrorbars to draw a box instead of a single dot"""
+        """Return point as boxxyerrorbars to draw a box instead of a single dot."""
         x_low = self.x
         x_high = self.x + 1
         y_low = self.y
@@ -103,7 +104,7 @@ class Point:
 
 
 class Plot(object):
-    """List of point with methods to display/dump datas for gnuplot"""
+    """List of point with methods to display/dump datas for gnuplot."""
     def __init__(self):
         self.points = list()
 
@@ -114,18 +115,18 @@ class Plot(object):
         return s
 
     def dump(self, output="/dev/stdout"):
-        """Dump data to stdout or file if provided"""
+        """Dump data to stdout or file if provided."""
         f_out = open(output, "wb")
         for p in self.points:
              f_out.write(p.gp_dump_boxxy())
 
     def add(self, p):
-        """Add Point to list if not already present"""
+        """Add Point to list if not already present."""
         if p not in self.points:
             self.points.append(p)
 
     def gp_script(self, script_name):
-        """Generate gnuplot script and dump data to file"""
+        """Generate gnuplot script and dump data to file."""
         data_file = script_name + ".dat"
         # script
         f_out = open(script_name + ".gnu", "wb")
@@ -140,15 +141,12 @@ class Plot(object):
 
 
     def offset(self, offset_x, offset_y):
-        """Apply offset to all the points"""
-        # NOTE: we are modifying the elements of the set we are currently iterating
-        # I would expecte to have issue because modifying an element changes its hash
-        # It looks like it is working though
+        """Apply offset to all the points."""
         for p in self.points:
             p.offset(offset_x, offset_y)
 
     def get_xrange(self, margin=1):
-        """Get horizontal range for which graph will be displayed extanded by margin on both side"""
+        """Get horizontal range for which graph will be displayed extanded by margin on both side."""
         minX = None
         maxX = None
         for p in self.points:
@@ -161,12 +159,12 @@ class Plot(object):
         return (minX - margin, maxX  + margin)
 
     def get_gp_xrange(self):
-        """Return xrange for gnuplot script"""
+        """Return xrange for gnuplot script."""
         minX, maxX = self.get_xrange()
         return "[x = " + str(minX) + ":" + str(maxX) + "]"
 
     def get_yrange(self, margin=1):
-        """Get vertical range for which graph will be displayed extanded by margin on both side"""
+        """Get vertical range for which graph will be displayed extanded by margin on both side."""
         minY = None
         maxY = None
         for p in self.points:
@@ -179,7 +177,7 @@ class Plot(object):
         return (minY - margin, maxY  + margin)
 
     def get_gp_yrange(self):
-        """Return yrange for gnuplot script"""
+        """Return yrange for gnuplot script."""
         minY, maxY = self.get_yrange()
         return "[y = " + str(minY) + ":" + str(maxY) + "]"
 
@@ -195,7 +193,7 @@ class Ellipse(Plot):
         """
         Apply offset to ellipse
 
-        Adds offset coords to center and apply this offset to the list of points if they are already built
+        Adds offset coords to center and apply this offset to the list of points if they are already built.
         """
         self.center.offset(offset_x, offset_y)
         # Call parent's offset method to move the points
@@ -230,7 +228,7 @@ class Ellipse(Plot):
 
     def remove_corners(self):
         """
-        Remove corner points on the inside of the plot
+        Remove corner points on the inside of the plot.
 
         For a closed shape, it may be necessary to remove corners inside the plot
         to smooth the figure :
@@ -247,7 +245,7 @@ class Ellipse(Plot):
                 self.points.remove(p)
 
     def is_corner(self, p):
-        """Return true if p is forming a corner with adjacent points"""
+        """Return true if p is forming a corner with adjacent points."""
         # get other points that would form the corner depending on quadrant
         # determine quadrant for circle centered to origin
         pc = Point(p.x - self.center.x, p.y - self.center.y)
@@ -269,7 +267,7 @@ class Ellipse(Plot):
 
 
 class Circle(Ellipse):
-    """List of points to form a circle in a discrete cartesian coordinates system"""
+    """List of points to form a circle in a discrete cartesian coordinates system."""
 
     def __init__(self, radius):
         # Circle is an ellipse with major and minor radius equals
@@ -287,7 +285,7 @@ class HalfCircle(Circle):
         """
         Build list of points for the half circle.
 
-        Iterating over high number of positions
+        Iterating over high number of positions.
         """
         del self.points[:]
         # Number of samples
