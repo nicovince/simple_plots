@@ -29,18 +29,18 @@ class Point:
 
     def mirror_y(self, x=0):
         """Return symetrical point on vertical axis."""
-        return Point(x - abs(x-self.x), self.y)
+        return Point(x - (self.x - x), self.y)
 
     def mirror_x(self, y=0):
         """Return symetrical point on horizontal axis."""
-        return Point(self.x, y - abs(y-self.y))
+        return Point(self.x, y - (self.y - y))
 
     def mirror_xy(self, symetry_center=None):
         """Return symetrical point from provided point"""
         if symetry_center is None:
             symetry_center = Point(0, 0)
-        return Point(symetry_center.x - abs(symetry_center.x-self.x),
-                     symetry_center.y - abs(symetry_center.y-self.y))
+        return Point(symetry_center.x - (self.x - symetry_center.x),
+                     symetry_center.y - (self.y - symetry_center.y))
 
     @staticmethod
     def snap(x, y):
